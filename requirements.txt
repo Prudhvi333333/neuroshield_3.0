@@ -1,0 +1,9 @@
+google-generativeai
+streamlit
+langchain
+langgraph
+python-dotenv
+google-cloud-storage
+google-cloud-logging
+gunicorn
+google-cloud-aiplatform
