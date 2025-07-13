@@ -44,3 +44,63 @@ class AuditChainAgent:
                 f.write(json.dumps(log_entry) + "\n")
         except IOError as e:
             print(f"Error writing to audit log {self.log_file}: {e}")
+
+# import json
+# import os
+# import threading
+# from datetime import datetime
+ 
+# from agents.logging import bq_logger
+ 
+ 
+# class AuditChainAgent:
+#     """
+#     Streams high-risk or hallucinated events to BigQuery (primary) and
+#     falls back to a local NDJSON file if BigQuery is unreachable.
+#     """
+ 
+#     def __init__(self, log_file: str = "logs/audit_log.json"):
+#         self.log_file = log_file
+#         os.makedirs(os.path.dirname(self.log_file), exist_ok=True)
+ 
+#     # ------------------------------------------------------------------ #
+#     # Public API
+#     # ------------------------------------------------------------------ #
+#     def log_event(self, event_data: dict) -> None:
+#         """
+#         Asynchronously logs an event when either condition is true:
+#         • `classification` is "Risky" or "Blocked"
+#         • `verdict` contains the substring "hallucinat" (case-insensitive)
+#         """
+#         classification = event_data.get("classification", "Safe")
+#         verdict        = (event_data.get("verdict") or "").lower()
+ 
+#         should_log = (
+#             classification in {"Risky", "Blocked"} or
+#             "hallucinat" in verdict
+#         )
+#         if not should_log:
+#             return
+ 
+#         # Make a shallow copy so we never mutate upstream state
+#         log_entry               = event_data.copy()
+#         log_entry["timestamp"]  = datetime.utcnow().isoformat()
+ 
+#         # ------------------------------------------------------------------ #
+#         # Fire-and-forget so we don’t block the request path
+#         # ------------------------------------------------------------------ #
+#         def _bq_task(entry: dict):
+#             try:
+#                 bq_logger.write_event(entry)                       # primary sink
+#             except Exception as bq_err:
+#                 # Fallback: append to local NDJSON file
+#                 try:
+#                     with open(self.log_file, "a") as fh:
+#                         fh.write(json.dumps(entry) + "\n")
+#                 except Exception as file_err:
+#                     print(
+#                         f"[CRITICAL] Audit log failed – "
+#                         f"BigQuery: {bq_err}; file fallback: {file_err}"
+#                     )
+ 
+#         threading.Thread(target=_bq_task, args=(log_entry,), daemon=True).start()
